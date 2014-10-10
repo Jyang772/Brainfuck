@@ -11,6 +11,8 @@ string* minimize_file(string *);
 char* bf_create_array(int);
 char* bf_execute(string*, char*, char*);
 
+struct Command* build_command_struct(string *);
+
 
 struct Command{
     char type;
@@ -38,15 +40,13 @@ int main(int argc, char* argv[])
 
 
     string* program = bf_read_file(filename);
+    cout << *program << endl;
     char *prog_array = bf_create_array(DEFAULT_ARRAY_SIZE);
     char *ptr = prog_array;
 
-    ptr = bf_execute(program_string,prog_array,ptr);
+    ptr = bf_execute(program,prog_array,ptr);
 
-
-//    char *ptr = prog_array;
-//    ptr = bf_execute(program_string, prog_array, ptr);
-//    bf_destroy_array(prog_array);
+    cout << "End" << endl;
 
     delete program;
     return 0;
@@ -74,7 +74,7 @@ string* minimize_file(string* file_string){
 
     cout << "minimize_file" << endl;
 
-    string validChars = "<>.,+=[]";
+    string validChars = "<>.,+-[]";
     int codeLength = file_string->length();
     int pos = 0;
 
@@ -90,6 +90,8 @@ string* minimize_file(string* file_string){
         }
     }
 
+    file_string->resize(pos);
+
     return file_string;
 
 }
@@ -104,7 +106,49 @@ char *bf_create_array(int array_size){
 
 char *bf_execute(string* program, char *prog_array, char *ptr){
 
+    cout << "bf_execute" << endl;
+    struct Command *command_struct = build_command_struct(program);
+    struct Command *head = command_struct;
+    while (command_struct->next_command) {
+        command_struct = command_struct->next_command;
+        switch (command_struct->type) {
+        case '+':
+            *ptr += command_struct->magnitude;
+            break;
+        case '-':
+            *ptr -= command_struct->magnitude;
+            break;
+        case '>':
+            ptr += command_struct->magnitude;
+            break;
+        case '<':
+            ptr -= command_struct->magnitude;
+            break;
+        case '.':
+            putchar(*ptr);
+            break;
+        case ',':
+            *ptr = getchar();
+            break;
+        case '[':
+            if (*ptr != 0) {
+                command_struct = command_struct->child_command;
+            }
+            break;
+        case ']':
+            if (*ptr != 0) {
+                command_struct = command_struct->parent_command->child_command;	//Return to the 'S'
+            } else {
+                command_struct = command_struct->parent_command;
+            }
+        default:
+            break;
+        }
+    }
+    delete head;
+    return ptr;
 }
+
 
 
 
@@ -118,18 +162,22 @@ struct Command *new_command(char type, struct Command *parent){
     return comm;
 }
 
+
 struct Command *build_command_struct(string *code)
 {
+    cout << "build_commmand_struct" << endl;
     int code_len = code->length();
+    cout << "code_len: " << code_len << endl;
 
     struct Command *head = new_command('S', NULL);
     struct Command *comm = head;
 
     for(int i=0; i<code_len; i++){
-
-        struct Command *next = new_command(code[i],comm->parent_command);
+        struct Command *next = new_command((*code)[i],comm->parent_command);
         comm->next_command = next;
         comm = next;
+
+        cout << "comm->type : " << comm->type << endl;
 
         if(comm->type == '['){
             struct Command *child = new_command('S',comm);
@@ -139,5 +187,8 @@ struct Command *build_command_struct(string *code)
         else if(comm->type == ']')
             comm = comm->parent_command;
     }
+
     return head;
 }
+
+
