@@ -305,7 +305,7 @@ compiler_clean:
 
 ####### Compile
 
-main.o: ../bf/main.cpp 
+main.o: ../bf/main.cpp ../bf/bf2c.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../bf/main.cpp
 
 ####### Install
