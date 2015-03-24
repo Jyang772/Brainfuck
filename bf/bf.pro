@@ -6,3 +6,6 @@ CONFIG -= qt
 
 SOURCES += main.cpp
 
+HEADERS += \
+    bf2c.h
+

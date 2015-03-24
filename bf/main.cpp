@@ -2,6 +2,67 @@
 #include <fstream>
 #include <sstream>
 #include <string.h>
+#include "bf2c.h"
+#define DEFAULT_ARRAY_SIZE 30000
+
+using namespace std;
+
+string* bf_read_file(string);
+string* minimize_file(string *);
+char* bf_create_array(int);
+char* bf_execute(string*, /*char*,*/ char*);
+
+struct Command* build_command_struct(string *);
+
+
+struct Command{
+    //Holds, type. If head -> static, if child -> static. Otherwise, it is the character.
+    char type;
+    int magnitude;
+    struct Command *parent_command;
+    struct Command *next_command;
+    struct Command *child_command;
+};
+
+
+struct Options{
+    bool deCompile;
+    string inputFileName;
+    string outputFileName;
+};
+
+void parse_command_line(Options &options, int &argc, char* argv[]){
+
+    if(argc == 1){
+        cout << "Usage: " << argv[0] << " filename [-o output|-c|-d|-r]\n";
+        cout << "-o output: Set output file name\n";
+        cout << "-c : Decompile to C++ program\n";
+        cout << "-b : Compile Brainfuck program\n";
+        exit;
+    }
+
+    for(int i=0; i<argc; i++)
+    {
+        if(argv[i] == string("-c"))
+            options.deCompile = true;
+        else if(argv[i] == string("-b"))
+            options.deCompile = false;
+        else if(argv[i] == string("-o")){
+            options.outputFileName = argv[++i];
+            continue;
+        }
+        else
+            options.inputFileName = argv[i];
+
+    }
+
+
+}
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string.h>
 #define DEFAULT_ARRAY_SIZE 30000
 
 using namespace std;
@@ -13,14 +74,6 @@ char* bf_execute(string*, char*, char*);
 
 struct Command* build_command_struct(string *);
 
-
-struct Command{
-    char type;
-    int magnitude;
-    struct Command *parent_command;
-    struct Command *next_command;
-    struct Command *child_command;
-};
 
 int main(int argc, char* argv[])
 {
@@ -37,6 +90,8 @@ int main(int argc, char* argv[])
     }
     else
         filename = argv[1];
+
+    filename = "test.bf";
 
 
     string* program = bf_read_file(filename);
@@ -173,6 +228,7 @@ struct Command *build_command_struct(string *code)
     struct Command *comm = head;
 
     for(int i=0; i<code_len; i++){
+        cout << "comm(before) : " << comm->type << endl;
         struct Command *next = new_command((*code)[i],comm->parent_command);
         comm->next_command = next;
         comm = next;
@@ -180,15 +236,15 @@ struct Command *build_command_struct(string *code)
         cout << "comm->type : " << comm->type << endl;
 
         if(comm->type == '['){
-            struct Command *child = new_command('S',comm);
+            struct Command *child = new_command('C',comm);
             comm->child_command = child;
             comm = child;
         }
-        else if(comm->type == ']')
+        else if(comm->type == ']'){
             comm = comm->parent_command;
+            cout << "comm(parent): " << comm->type << endl;
+        }
     }
 
     return head;
 }
-
-

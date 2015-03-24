@@ -1,0 +1,11 @@
+#include <iostream>
+#include <string.h>
+#include <stdio.h>
+int main(){
+unsigned char* _  = new unsigned char[30000];
+putchar(*_);
+while(*_) {
+*_ += 1;}
+putchar(*_);
+
+return 0;}
